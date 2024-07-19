@@ -18,7 +18,6 @@ market_name = 'NASDAQ'
 relation_name = 'wikidata'
 stock_num = 1026
 lookback_length = 16
-epochs = 100
 valid_index = 756
 test_index = 1008
 fea_num = 5
@@ -70,7 +69,7 @@ def validate(model, start_index, end_index):
             prediction = model(data_batch)
             cur_loss, cur_reg_loss, cur_rank_loss, cur_rr = get_loss(prediction, gt_batch, price_batch, mask_batch,
                                                                      stock_num, alpha)
-            resi = pd.DataFrame({'prediction': prediction.cpu()[:, 0], 'ground_truth': gt_batch.cpu()[:, 0]})
+            resi = pd.DataFrame({'prediction': cur_rr.cpu()[:, 0], 'ground_truth': gt_batch.cpu()[:, 0]})
             resi['id'] = cur_offset
             res = pd.concat([res, resi], ignore_index=True)
             loss += cur_loss.item()
@@ -98,7 +97,7 @@ def get_batch(offset=None):
         np.expand_dims(price_data[:, offset + seq_len - 1], axis=1),
         np.expand_dims(gt_data[:, offset + seq_len + steps - 1], axis=1))
 
-def train(model):
+def train(model, epochs = 100):
     trade_dates = mask_data.shape[1]
     best_valid_loss = np.inf
     best_valid_perf = None
