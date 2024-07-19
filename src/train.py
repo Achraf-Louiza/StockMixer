@@ -17,14 +17,14 @@ data_path = '../dataset'
 market_name = 'NASDAQ'
 relation_name = 'wikidata'
 stock_num = 1026
-lookback_length = 16
+lookback_length = 32
 valid_index = 756
 test_index = 1008
 fea_num = 5
 market_num = 20
 steps = 1
 learning_rate = 0.001
-alpha = 0.1
+alpha = 1
 scale_factor = 3
 activation = 'GELU'
 
@@ -103,6 +103,8 @@ def train(model, epochs = 100):
     best_valid_perf = None
     best_test_perf = None
     batch_offsets = np.arange(start=0, stop=valid_index, dtype=int)
+    final_val_res = None
+    final_test_res = None
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     for epoch in range(epochs):
         print("epoch{}##########################################################".format(epoch + 1))
@@ -141,9 +143,11 @@ def train(model, epochs = 100):
             best_valid_loss = val_loss
             best_valid_perf = val_perf
             best_test_perf = test_perf
+            final_val_res = val_res
+            final_test_res = test_res
     
         print('Valid performance:\n', 'mse:{:.2e}, IC:{:.2e}, RIC:{:.2e}, prec@10:{:.2e}, SR:{:.2e}'.format(val_perf['mse'], val_perf['IC'],
                                                          val_perf['RIC'], val_perf['prec_10'], val_perf['sharpe5']))
         print('Test performance:\n', 'mse:{:.2e}, IC:{:.2e}, RIC:{:.2e}, prec@10:{:.2e}, SR:{:.2e}'.format(test_perf['mse'], test_perf['IC'],
                                                                                                            test_perf['RIC'], test_perf['prec_10'], test_perf['sharpe5']), '\n\n')
-    return val_res, test_res
+    return final_val_res, final_test_res
