@@ -70,7 +70,7 @@ def validate(model, start_index, end_index):
             prediction = model(data_batch)
             cur_loss, cur_reg_loss, cur_rank_loss, cur_rr = get_loss(prediction, gt_batch, price_batch, mask_batch,
                                                                      stock_num, alpha)
-            resi = pd.DataFrame({'prediction': prediction[:, 0], 'ground_truth': gt_batch[:, 0]})
+            resi = pd.DataFrame({'prediction': prediction.cpu()[:, 0], 'ground_truth': gt_batch.cpu()[:, 0]})
             resi['id'] = cur_offset
             res = pd.concat([res, resi], ignore_index=True)
             loss += cur_loss.item()
@@ -147,4 +147,4 @@ def train(model):
                                                          val_perf['RIC'], val_perf['prec_10'], val_perf['sharpe5']))
         print('Test performance:\n', 'mse:{:.2e}, IC:{:.2e}, RIC:{:.2e}, prec@10:{:.2e}, SR:{:.2e}'.format(test_perf['mse'], test_perf['IC'],
                                                                                                            test_perf['RIC'], test_perf['prec_10'], test_perf['sharpe5']), '\n\n')
-        return val_res, test_res
+    return val_res, test_res
