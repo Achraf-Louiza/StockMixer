@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 acv = nn.GELU()
 
-def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha, beta):
+def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha, beta, scale_factor=20):
     device = prediction.device
     all_one = torch.ones(batch_size, 1, dtype=torch.float32).to(device)
     return_ratio = torch.div(torch.sub(prediction, base_price), base_price)
@@ -22,12 +22,14 @@ def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha, beta
         F.relu(pre_pw_dif * gt_pw_dif * mask_pw)
     )
     
-    # Derive classification labels from ground truth and predictions
-    gt_labels = (ground_truth > 0).float()
-    pred_labels = (return_ratio > 0).float()
+    # Scale ground truth return ratios and use sigmoid to convert to probabilities
+    gt_probs = torch.sigmoid(ground_truth * scale_factor)
     
-    # Calculate classification loss
-    classification_loss = F.binary_cross_entropy(pred_labels, gt_labels, reduction='mean')
+    # Scale predicted return ratios and use sigmoid to convert to probabilities
+    pred_probs = torch.sigmoid(return_ratio * scale_factor)
+    
+    # Calculate classification loss using probabilities
+    classification_loss = F.binary_cross_entropy(pred_probs, gt_probs, reduction='mean')
     
     loss = reg_loss + alpha * rank_loss + beta * classification_loss
     return loss, reg_loss, rank_loss, classification_loss, return_ratio
