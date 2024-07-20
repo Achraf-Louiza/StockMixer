@@ -24,7 +24,7 @@ market_num = 20
 steps = 1
 learning_rate = 0.001
 alpha = 0.1
-beta = 1
+beta = 0.001
 scale_factor = 3
 activation = 'GELU'
 
@@ -116,6 +116,7 @@ def train(model, epochs = 100):
         tra_loss = 0.0
         tra_reg_loss = 0.0
         tra_rank_loss = 0.0
+        tra_classification_loss = 0.0
         for j in tqdm(range(valid_index - lookback_length - steps + 1)):
             data_batch, mask_batch, price_batch, gt_batch = map(
                 lambda x: torch.Tensor(x).to(device),
@@ -128,14 +129,15 @@ def train(model, epochs = 100):
             cur_loss = cur_loss
             cur_loss.backward()
             optimizer.step()
-    
             tra_loss += cur_loss.item()
             tra_reg_loss += cur_reg_loss.item()
             tra_rank_loss += cur_rank_loss.item()
+            tra_classification_loss += cur_classif_loss.item()
         tra_loss = tra_loss / (valid_index - lookback_length - steps + 1)
         tra_reg_loss = tra_reg_loss / (valid_index - lookback_length - steps + 1)
         tra_rank_loss = tra_rank_loss / (valid_index - lookback_length - steps + 1)
-        print('Train : loss:{:.2e}  =  {:.2e} + alpha*{:.2e}'.format(tra_loss, tra_reg_loss, tra_rank_loss))
+        tra_classification_loss = tra_classification_loss / (valid_index-lookback_length-steps+1)
+        print('Train : loss:{:.2e}  =  {:.2e} + alpha*{:.2e} + beta*{:2.e}'.format(tra_loss, tra_reg_loss, tra_rank_loss, tra_classification_loss))
     
         val_loss, val_reg_loss, val_rank_loss, val_classification_loss, val_perf, val_res = validate(model, valid_index, test_index)
         print('Valid : loss:{:.2e}  =  {:.2e} + alpha*{:.2e} + beta*{:.2e}'.format(val_loss, val_reg_loss, val_rank_loss, val_classification_loss))
