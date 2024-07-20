@@ -23,8 +23,6 @@ fea_num = 5
 market_num = 20
 steps = 1
 learning_rate = 0.001
-alpha = 5
-beta = 1e-3
 scale_factor = 3
 activation = 'GELU'
 
@@ -51,7 +49,7 @@ else:
         price_data = pickle.load(f)
 
 
-def validate(model, start_index, end_index):
+def validate(model, start_index, end_index, alpha, beta):
     with torch.no_grad():
         cur_valid_pred = np.zeros([stock_num, end_index - start_index], dtype=float)
         cur_valid_gt = np.zeros([stock_num, end_index - start_index], dtype=float)
@@ -101,7 +99,7 @@ def get_batch(offset=None):
         np.expand_dims(gt_data[:, offset + seq_len + steps - 1], axis=1))
 
 
-def train(model, epochs = 100):
+def train(model, epochs = 100, alpha = 5, beta = 1e-3):
     trade_dates = mask_data.shape[1]
     best_valid_loss = np.inf
     best_valid_perf = None
