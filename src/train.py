@@ -96,6 +96,7 @@ def get_batch(offset=None):
         np.expand_dims(price_data[:, offset + seq_len - 1], axis=1),
         np.expand_dims(gt_data[:, offset + seq_len + steps - 1], axis=1))
 
+
 def train(model, epochs = 100):
     trade_dates = mask_data.shape[1]
     best_valid_loss = np.inf

@@ -4,11 +4,43 @@ import torch.nn.functional as F
 
 acv = nn.GELU()
 
+def compute_inverse_mean_return_weights(targets, eps=1e-8):
+    """
+    Compute the inverse mean return weights for each stock.
+    
+    Args:
+    targets (torch.Tensor): The ground truth return ratios of shape (num_stocks, num_samples).
+    eps (float): A small value to avoid division by zero.
+    
+    Returns:
+    torch.Tensor: The inverse mean return weights for each stock.
+    """
+    means = targets.mean(dim=1, keepdim=True) + eps  # Mean return per stock
+    inverse_mean_weights = 1 / means
+    return inverse_mean_weights
+
+def weighted_mse_loss(predictions, targets, weights):
+    """
+    Calculate the weighted MSE loss given predictions, targets, and weights.
+    
+    Args:
+    predictions (torch.Tensor): The predicted return ratios of shape (num_stocks, num_samples).
+    targets (torch.Tensor): The ground truth return ratios of shape (num_stocks, num_samples).
+    weights (torch.Tensor): The weights for each stock of shape (num_stocks, 1).
+    
+    Returns:
+    torch.Tensor: The weighted MSE loss.
+    """
+    losses = (predictions - targets) ** 2
+    weighted_losses = weights * losses
+    return weighted_losses.mean()
+
 def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha):
     device = prediction.device
     all_one = torch.ones(batch_size, 1, dtype=torch.float32).to(device)
     return_ratio = torch.div(torch.sub(prediction, base_price), base_price)
-    reg_loss = F.mse_loss(return_ratio * mask, ground_truth * mask)
+    weights = compute_inverse_mean_return_weights(ground_truth)
+    reg_loss = F.weighted_mse_loss(return_ratio * mask, ground_truth * mask, weights)
     pre_pw_dif = torch.sub(
         return_ratio @ all_one.t(),
         all_one @ return_ratio.t()
