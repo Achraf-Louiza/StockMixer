@@ -16,7 +16,7 @@ def compute_inverse_mean_return_weights(targets, eps=1e-8):
     torch.Tensor: The inverse mean return weights for each stock.
     """
     means = targets.mean(dim=1, keepdim=True) + eps  # Mean return per stock
-    inverse_mean_weights = 1 / means
+    inverse_mean_weights = 1 / means**2
     return inverse_mean_weights
 
 def weighted_mse_loss(predictions, targets, weights):
