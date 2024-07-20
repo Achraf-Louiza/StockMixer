@@ -40,7 +40,7 @@ def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha):
     all_one = torch.ones(batch_size, 1, dtype=torch.float32).to(device)
     return_ratio = torch.div(torch.sub(prediction, base_price), base_price)
     weights = compute_inverse_mean_return_weights(ground_truth)
-    reg_loss = F.weighted_mse_loss(return_ratio * mask, ground_truth * mask, weights)
+    reg_loss = weighted_mse_loss(return_ratio * mask, ground_truth * mask, weights)
     pre_pw_dif = torch.sub(
         return_ratio @ all_one.t(),
         all_one @ return_ratio.t()
