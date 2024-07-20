@@ -24,6 +24,7 @@ market_num = 20
 steps = 1
 learning_rate = 0.001
 alpha = 0.1
+beta = 1
 scale_factor = 3
 activation = 'GELU'
 
@@ -58,6 +59,7 @@ def validate(model, start_index, end_index):
         loss = 0.
         reg_loss = 0.
         rank_loss = 0.
+        classification_loss = 0.
         res = pd.DataFrame()
         for cur_offset in range(start_index - lookback_length - steps + 1, end_index - lookback_length - steps + 1):
             data_batch, mask_batch, price_batch, gt_batch = map(
@@ -66,22 +68,24 @@ def validate(model, start_index, end_index):
                 get_batch(cur_offset)
             )
             prediction = model(data_batch)
-            cur_loss, cur_reg_loss, cur_rank_loss, cur_rr = get_loss(prediction, gt_batch, price_batch, mask_batch,
-                                                                     stock_num, alpha)
+            cur_loss, cur_reg_loss, cur_rank_loss, cur_classification_loss, cur_rr = get_loss(prediction, gt_batch, price_batch, mask_batch,
+                                                                                               stock_num, alpha, beta)
             resi = pd.DataFrame({'prediction': cur_rr.cpu()[:, 0], 'ground_truth': gt_batch.cpu()[:, 0]})
             resi['id'] = cur_offset
             res = pd.concat([res, resi], ignore_index=True)
             loss += cur_loss.item()
             reg_loss += cur_reg_loss.item()
             rank_loss += cur_rank_loss.item()
+            classification_loss += cur_classification_loss.item()
             cur_valid_pred[:, cur_offset - (start_index - lookback_length - steps + 1)] = cur_rr[:, 0].cpu()
             cur_valid_gt[:, cur_offset - (start_index - lookback_length - steps + 1)] = gt_batch[:, 0].cpu()
             cur_valid_mask[:, cur_offset - (start_index - lookback_length - steps + 1)] = mask_batch[:, 0].cpu()
         loss = loss / (end_index - start_index)
         reg_loss = reg_loss / (end_index - start_index)
         rank_loss = rank_loss / (end_index - start_index)
+        classification_loss = classification_loss / (end_index - start_index)
         cur_valid_perf = evaluate(cur_valid_pred, cur_valid_gt, cur_valid_mask)
-    return loss, reg_loss, rank_loss, cur_valid_perf, res
+    return loss, reg_loss, rank_loss, classification_loss, cur_valid_perf, res
 
 
 def get_batch(offset=None):
@@ -119,8 +123,8 @@ def train(model, epochs = 100):
             )
             optimizer.zero_grad()
             prediction = model(data_batch)
-            cur_loss, cur_reg_loss, cur_rank_loss, _ = get_loss(prediction, gt_batch, price_batch, mask_batch,
-                                                                stock_num, alpha)
+            cur_loss, cur_reg_loss, cur_rank_loss, cur_classif_loss, _ = get_loss(prediction, gt_batch, price_batch, mask_batch,
+                                                                                  stock_num, alpha, beta)
             cur_loss = cur_loss
             cur_loss.backward()
             optimizer.step()
@@ -133,11 +137,11 @@ def train(model, epochs = 100):
         tra_rank_loss = tra_rank_loss / (valid_index - lookback_length - steps + 1)
         print('Train : loss:{:.2e}  =  {:.2e} + alpha*{:.2e}'.format(tra_loss, tra_reg_loss, tra_rank_loss))
     
-        val_loss, val_reg_loss, val_rank_loss, val_perf, val_res = validate(model, valid_index, test_index)
-        print('Valid : loss:{:.2e}  =  {:.2e} + alpha*{:.2e}'.format(val_loss, val_reg_loss, val_rank_loss))
+        val_loss, val_reg_loss, val_rank_loss, val_classification_loss, val_perf, val_res = validate(model, valid_index, test_index)
+        print('Valid : loss:{:.2e}  =  {:.2e} + alpha*{:.2e} + beta*{:.2e}'.format(val_loss, val_reg_loss, val_rank_loss, val_classification_loss))
     
-        test_loss, test_reg_loss, test_rank_loss, test_perf, test_res = validate(model, test_index, trade_dates)
-        print('Test: loss:{:.2e}  =  {:.2e} + alpha*{:.2e}'.format(test_loss, test_reg_loss, test_rank_loss))
+        test_loss, test_reg_loss, test_rank_loss, test_classification_loss, test_perf, test_res = validate(model, test_index, trade_dates)
+        print('Test: loss:{:.2e}  =  {:.2e} + alpha*{:.2e} + beta*{:.2e}'.format(test_loss, test_reg_loss, test_rank_loss, test_classification_loss))
     
         if val_loss < best_valid_loss:
             best_valid_loss = val_loss

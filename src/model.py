@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 acv = nn.GELU()
 
-def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha):
+def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha, beta):
     device = prediction.device
     all_one = torch.ones(batch_size, 1, dtype=torch.float32).to(device)
     return_ratio = torch.div(torch.sub(prediction, base_price), base_price)
@@ -21,8 +21,16 @@ def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha):
     rank_loss = torch.mean(
         F.relu(pre_pw_dif * gt_pw_dif * mask_pw)
     )
-    loss = reg_loss + alpha * rank_loss
-    return loss, reg_loss, rank_loss, return_ratio
+    
+    # Derive classification labels from ground truth and predictions
+    gt_labels = (ground_truth > 0).float()
+    pred_labels = (return_ratio > 0).float()
+    
+    # Calculate classification loss
+    classification_loss = F.binary_cross_entropy(pred_labels, gt_labels, reduction='mean')
+    
+    loss = reg_loss + alpha * rank_loss + beta * classification_loss
+    return loss, reg_loss, rank_loss, classification_loss, return_ratio
 
 
 class MixerBlock(nn.Module):
