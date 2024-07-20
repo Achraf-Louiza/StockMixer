@@ -117,7 +117,6 @@ def train(model, epochs = 100):
                 get_batch(batch_offsets[j])
             )
             optimizer.zero_grad()
-            print(data_batch.shape)
             prediction = model(data_batch)
             cur_loss, cur_reg_loss, cur_rank_loss, _ = get_loss(prediction, gt_batch, price_batch, mask_batch,
                                                                 stock_num, alpha)
