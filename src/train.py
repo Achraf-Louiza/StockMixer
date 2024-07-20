@@ -23,8 +23,8 @@ fea_num = 5
 market_num = 20
 steps = 1
 learning_rate = 0.001
-alpha = 0.1
-beta = 0.001
+alpha = 1
+beta = 0.0001
 scale_factor = 3
 activation = 'GELU'
 
