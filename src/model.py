@@ -196,4 +196,3 @@ class StockMixer(nn.Module):
         y = self.time_fc(y)
         z = self.time_fc_(z)
         return y + z
-
