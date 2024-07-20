@@ -156,4 +156,4 @@ def train(model, epochs = 100):
                                                          val_perf['RIC'], val_perf['prec_10'], val_perf['sharpe5']))
         print('Test performance:\n', 'mse:{:.2e}, IC:{:.2e}, RIC:{:.2e}, prec@10:{:.2e}, SR:{:.2e}'.format(test_perf['mse'], test_perf['IC'],
                                                                                                            test_perf['RIC'], test_perf['prec_10'], test_perf['sharpe5']), '\n\n')
-    return final_val_res, final_test_res
+    return val_res, test_res
