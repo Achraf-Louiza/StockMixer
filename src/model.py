@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 acv = nn.GELU()
 
-def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha, beta, scale_factor=20):
+def get_loss(prediction, ground_truth, base_price, mask, batch_size, alpha, beta, scale_factor=10):
     device = prediction.device
     all_one = torch.ones(batch_size, 1, dtype=torch.float32).to(device)
     return_ratio = torch.div(torch.sub(prediction, base_price), base_price)
