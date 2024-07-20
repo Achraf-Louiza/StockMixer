@@ -137,10 +137,10 @@ def train(model, epochs = 100, alpha = 5, beta = 1e-3):
         tra_classification_loss = tra_classification_loss / (valid_index-lookback_length-steps+1)
         print('Train : loss:{:.2e}  =  {:.2e} + alpha*{:.2e} + beta*{:.2e}'.format(tra_loss, tra_reg_loss, tra_rank_loss, tra_classification_loss))
     
-        val_loss, val_reg_loss, val_rank_loss, val_classification_loss, val_perf, val_res = validate(model, valid_index, test_index)
+        val_loss, val_reg_loss, val_rank_loss, val_classification_loss, val_perf, val_res = validate(model, valid_index, test_index, alpha=alpha, beta=beta)
         print('Valid : loss:{:.2e}  =  {:.2e} + alpha*{:.2e} + beta*{:.2e}'.format(val_loss, val_reg_loss, val_rank_loss, val_classification_loss))
     
-        test_loss, test_reg_loss, test_rank_loss, test_classification_loss, test_perf, test_res = validate(model, test_index, trade_dates)
+        test_loss, test_reg_loss, test_rank_loss, test_classification_loss, test_perf, test_res = validate(model, test_index, trade_dates, alpha=alpha, beta=beta)
         print('Test: loss:{:.2e}  =  {:.2e} + alpha*{:.2e} + beta*{:.2e}'.format(test_loss, test_reg_loss, test_rank_loss, test_classification_loss))
     
         if val_loss < best_valid_loss:
