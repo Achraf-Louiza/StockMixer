@@ -15,9 +15,8 @@ device = torch.device("cuda") if torch.cuda.is_available() else 'cpu'
 
 data_path = '../dataset'
 market_name = 'NASDAQ'
-relation_name = 'wikidata'
 stock_num = 1026
-lookback_length = 32
+lookback_length = 16
 valid_index = 756
 test_index = 1008
 fea_num = 5
@@ -118,6 +117,7 @@ def train(model, epochs = 100):
                 get_batch(batch_offsets[j])
             )
             optimizer.zero_grad()
+            print(data_batch.shape)
             prediction = model(data_batch)
             cur_loss, cur_reg_loss, cur_rank_loss, _ = get_loss(prediction, gt_batch, price_batch, mask_batch,
                                                                 stock_num, alpha)
