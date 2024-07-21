@@ -15,7 +15,7 @@ device = torch.device("cuda") if torch.cuda.is_available() else 'cpu'
 
 data_path = '../dataset'
 market_name = 'NASDAQ'
-stock_num = 1026
+stock_num = 909
 lookback_length = 16
 valid_index = 756
 test_index = 1008
